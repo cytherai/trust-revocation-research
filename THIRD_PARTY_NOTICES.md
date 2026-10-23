@@ -1,8 +1,8 @@
 # Third-party notices
 
-The evidence package contains third-party material. It keeps its own terms.
-`LICENSE-DOCS` and `LICENSE-CODE` do not apply to it, and CytherAI claims no
-ownership of it.
+`node20-trust-evidence.zip` contains third-party material. It keeps its own
+terms. `LICENSE-DOCS` and `LICENSE-CODE` do not apply to it, and CytherAI
+claims no ownership of it.
 
 | In `node20-trust-evidence.zip` | Source | Terms |
 |---|---|---|
@@ -15,3 +15,8 @@ ownership of it.
 `node20-live-tls-2026-10-23.zip` contains only CytherAI's scripts and results.
 The certificate fields recorded in its results are factual data from the TLS
 connections.
+
+`certifi-download-share-2026-10-22.zip` contains only CytherAI's query and
+results. The download counts are factual data from PyPI's public download
+statistics, retrieved through ClickPy. The certifi releases are identified by
+name and SHA-256; none of their files is included.

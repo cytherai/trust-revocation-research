@@ -90,13 +90,38 @@ archived in `evidence/node20-live-tls-2026-10-23.zip`. That version recorded
 the outcome and version checks but not the detail check. The archived results
 contain the expected error code and leaf fingerprint for every case.
 
+## Download share
+
+`scripts/certifi_download_share.py` measures, per day, how many certifi
+downloads from PyPI were of a release whose CA bundle contains emSign ECC Root
+CA - G3.
+
+- Counts come from ClickPy's public copy of PyPI's download statistics, table
+  `pypi.pypi_downloads_per_day_by_version_by_installer_by_type`, summed per
+  day and version. Downloads by the bandersnatch mirror client are excluded;
+  every other installer is counted. The exact query is saved as `query.sql`.
+- For each version downloaded in the period, the script takes one release file
+  from PyPI's JSON API: the wheel if one was published, otherwise the sdist.
+  It checks the file's SHA-256 against PyPI's digest, reads `cacert.pem` from
+  the archive without running any package code, and looks for the root by the
+  SHA-256 of its DER encoding.
+- Releases are classified by what their bundle contains, not by the
+  advisory's version range. The advisory gives 2026.10.19 as the first patched
+  version, but 2026.10.18 lacks the root too, so its downloads count as fixed.
+- A release's age is the number of days from its first upload to PyPI to the
+  download day.
+
+The script needs only the Python 3 standard library. It refuses to reuse an
+output directory, and exits 2 if any download fails or any digest differs,
+before writing any results.
+
 ## Integrity
 
-- Every file in the evidence package is listed in its `SHA256SUMS`, and the
-  package's own hash is in `evidence/SHA256SUMS`.
-- Apart from its README and checksum list, the package is an unmodified subset
-  of a larger snapshot whose hash is published in the README. Anyone can check
-  the subset when that snapshot is released.
+- Every file in each evidence package is listed in its `SHA256SUMS`, and
+  each package's own hash is in `evidence/SHA256SUMS`.
+- Apart from its README and checksum list, `node20-trust-evidence.zip` is an
+  unmodified subset of a larger snapshot whose hash is published in the
+  README. Anyone can check the subset when that snapshot is released.
 - `scripts/check_provenance.sh` re-derives the Node.js stores from their tags,
   checks the test chains against chains.zip, and compares the `node:20` tags
   with the recorded digests. It exits 1 if any evidence differs from its

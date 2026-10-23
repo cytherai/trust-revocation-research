@@ -35,6 +35,17 @@
   `scripts/check_provenance.sh` reports the current state.
 - The test leaves expire on 2027-05-05. `scripts/verify_stores.sh` verifies as
   of `RETRIEVED_AT`, so its results stay reproducible after that.
-- The scripts need OpenSSL 3 or later. LibreSSL, which is macOS's
-  /usr/bin/openssl, lacks the options used, and the scripts refuse to run with
-  it.
+- The certifi download share counts downloads, not installations or
+  deployments. Cached dependencies, private mirrors and existing images make
+  no new downloads, and CI systems can download the same version many times.
+- Only downloads by the bandersnatch mirror client are excluded. Downloads
+  through other proxies, such as Nexus, are counted, and one proxy download
+  can serve many installations.
+- Downloading a certifi release that contains the root doesn't show that an
+  application relies on the root. That depends on its TLS client and
+  configuration.
+- The download counts are those ClickPy returned at `RETRIEVED_AT`. ClickPy
+  may revise them later.
+- `verify_stores.sh` and `check_isolation.sh` need OpenSSL 3 or later.
+  LibreSSL, which is macOS's /usr/bin/openssl, lacks the options used, and
+  `verify_stores.sh` refuses to run with it.

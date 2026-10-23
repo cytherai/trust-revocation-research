@@ -22,6 +22,18 @@ the runtime in `node:22.23.4` rejected it. Report:
 This shows that the runtime trusts a chain through a compromised intermediate.
 It does not show an attack, an interception or an affected deployment.
 
+## Finding: certifi downloads after the fix
+
+certifi, the CA bundle that Python's requests uses by default, removed emSign
+ECC Root CA - G3 in 2026.10.18 on 18 October. **From 20 to 22 October, 30.7% of
+certifi downloads from PyPI were still of releases that contain the root**:
+59.3 million of 193.0 million, excluding the bandersnatch mirror client. 44.5%
+of those affected downloads were of releases more than six months old, which
+is consistent with pinned versions that an upstream fix does not move. Report:
+[research/certifi-download-share.md](research/certifi-download-share.md).
+
+Download counts measure installation activity, not deployments.
+
 ## Verify it yourself
 
 You need bash, curl, python3 and OpenSSL 3 or later. On macOS, `/usr/bin/openssl`
@@ -36,6 +48,8 @@ is LibreSSL, which cannot run these checks: install OpenSSL
     bash scripts/check_provenance.sh /tmp/ev/node20-trust-evidence
     unzip -oq evidence/node20-live-tls-2026-10-23.zip -d /tmp/ev
     (cd /tmp/ev/node20-live-tls-2026-10-23 && sha256sum -c SHA256SUMS)
+    unzip -oq evidence/certifi-download-share-2026-10-22.zip -d /tmp/ev
+    (cd /tmp/ev/certifi-download-share-2026-10-22 && sha256sum -c SHA256SUMS)
 
 What each script should show:
 - `verify_stores.sh` reports the chain through emSign ECC Root CA - G3 as
@@ -49,23 +63,33 @@ What each script should show:
   `node:20` tags still point at the recorded digests. It exits 1 if any
   evidence differs from its source.
 
-The live HTTPS test's results are in `runs/*/results.jsonl` in the second
-package. To repeat the test you need Docker. Run it from the repository,
-giving an output directory that doesn't exist yet, for example
-`bash scripts/run_node_tls_probe.sh /tmp/tls-run`. Set
+The live HTTPS test's results are in `runs/*/results.jsonl` in
+`node20-live-tls-2026-10-23.zip`. To repeat the test you need Docker. Run it
+from the repository, giving an output directory that doesn't exist yet, for
+example `bash scripts/run_node_tls_probe.sh /tmp/tls-run`. Set
 `DOCKER_PLATFORM=linux/amd64` for amd64.
+
+To repeat the certifi measurement you need only Python 3, and an output
+directory that doesn't exist yet:
+
+    python3 -I scripts/certifi_download_share.py 2026-10-13 2026-10-22 /tmp/certifi-run
+
+The new `clickpy-daily.tsv` should match the archived one unless ClickPy has
+revised its counts, and the same 42 of 77 versions should contain the root.
 
 ## Evidence and timing
 
 The evidence in `node20-trust-evidence.zip` was retrieved on 2026-10-22 at
 21:19 UTC (`RETRIEVED_AT` in the package), before this repository was
 published. The live HTTPS test ran on 2026-10-23 between 06:13 and 06:17 UTC,
-and `node20-live-tls-2026-10-23.zip` holds both runs unmodified.
+and `node20-live-tls-2026-10-23.zip` holds both runs unmodified. The certifi
+download counts in `certifi-download-share-2026-10-22.zip` cover 13 to
+22 October and were retrieved on 2026-10-23 at 13:20 UTC.
 
-Both packages contain only the Node.js material. Apart from its README and
-checksum list, every file in `node20-trust-evidence.zip` is unmodified from
-CytherAI's full evidence snapshot, or, under `results/`, made of unmodified
-lines from it. The full snapshot (zip SHA-256
+The two Node.js packages contain only the Node.js material. Apart from its
+README and checksum list, every file in `node20-trust-evidence.zip` is
+unmodified from CytherAI's full evidence snapshot, or, under `results/`, made
+of unmodified lines from it. The full snapshot (zip SHA-256
 `6f5f468885c921d9b4be8b3ca881d568384d8c2097caef6b822e10724648435c`) also covers
 a finding under coordinated disclosure, and will be published once that
 disclosure ends.
@@ -90,7 +114,8 @@ disclosure ends.
 Wayne reported the key compromise, and the Chrome Root Program forwarded it to
 Mozilla. Mozilla confirmed it and recovered the keys independently. The test
 chains and the offline check come from https://emudhra.we-have-a-problem.com/
-(Dennis Jackson and contributors).
+(Dennis Jackson and contributors). The certifi download counts are PyPI's
+public download statistics, served by ClickHouse's ClickPy.
 
 Research by Malek Alhazmi, CytherAI. To cite this work, use
 `CITATION.cff`. To report a problem, see `SECURITY.md`.

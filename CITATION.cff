@@ -1,8 +1,8 @@
 cff-version: 1.2.0
 message: "If you use this research or its evidence, please cite it as below."
 type: dataset
-title: "Official Node 20 Docker Images Still Trust a Compromised eMudhra Certificate Chain — Rebuilding Doesn't Fix It"
-version: 0.1.0
+title: "CytherAI Trust Revocation Research"
+version: 0.2.0
 date-released: 2026-10-23
 authors:
   - given-names: Malek
@@ -14,13 +14,15 @@ repository-code: "https://github.com/cytherai/trust-revocation-research"
 url: "https://github.com/cytherai/trust-revocation-research"
 identifiers:
   - type: url
-    value: "https://github.com/cytherai/trust-revocation-research/releases/tag/v0.1.0"
-    description: "Release v0.1.0"
+    value: "https://github.com/cytherai/trust-revocation-research/releases/tag/v0.2.0"
+    description: "Release v0.2.0"
 keywords:
   - certificate revocation
   - trust store
   - eMudhra
   - Node.js
+  - certifi
+  - PyPI
   - container images
 preferred-citation:
   type: report
