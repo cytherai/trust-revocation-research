@@ -1,0 +1,76 @@
+# CytherAI Trust Revocation Research
+
+When a root program distrusts a certificate authority, do published software
+artifacts stop trusting it? This repository records our measurements, the
+evidence behind them, and scripts to reproduce them.
+
+## Finding: Node.js 20 and the eMudhra intermediate CA compromise
+
+On 17 October 2026 the private keys of eight eMudhra intermediate CAs were
+confirmed compromised (Mozilla Bugzilla 2083449). On 21 October, Node.js fixed
+its supported lines in 22.23.4, 24.22.1 and 26.12.1. Node.js 20 reached end of
+life on 30 April 2026 and did not get the fix.
+
+**Finding:** the official `node:20`, `node:20-slim` and `node:20-alpine` images
+run Node.js 20.20.2, whose built-in root store still accepts a certificate
+chain from one of the compromised intermediates. Rebuilding does not change
+that. Report: [research/node20-findings.md](research/node20-findings.md).
+
+This shows that a trust store would validate such a chain. It does not show an
+attack, an interception or an affected deployment.
+
+## Verify it yourself
+
+You need bash, curl, python3 and OpenSSL 3 or later. On macOS, `/usr/bin/openssl`
+is LibreSSL, which cannot run these checks: install OpenSSL
+(`brew install openssl@3`) and put it first in `PATH`.
+
+    (cd evidence && sha256sum -c SHA256SUMS)      # or: shasum -a 256 -c SHA256SUMS
+    unzip -oq evidence/node20-trust-evidence.zip -d /tmp/ev
+    (cd /tmp/ev/node20-trust-evidence && sha256sum -c SHA256SUMS)
+    bash scripts/verify_stores.sh /tmp/ev/node20-trust-evidence
+    bash scripts/check_provenance.sh /tmp/ev/node20-trust-evidence
+
+`verify_stores.sh` should report the chain through emSign ECC Root CA - G3 as
+ACCEPTED by the Node.js 20.20.2 and 22.22.0 roots, and rejected by 22.23.4 and
+24.22.1. `check_provenance.sh` does three checks against the live sources:
+- it re-derives each Node.js root store from its release tag;
+- it checks the test chains against the disclosure site's chains.zip;
+- it checks that the `node:20` tags still point at the recorded digests.
+
+## Evidence and timing
+
+The evidence was retrieved on 2026-10-22 at 21:19 UTC (`RETRIEVED_AT` in the
+package), before this repository was published. The current evidence package
+contains only the Node.js material. Apart from its README and checksum list, every file
+in it is unmodified from CytherAI's full evidence snapshot, or, under
+`results/`, made of unmodified lines from it. The
+full snapshot (zip SHA-256
+`6f5f468885c921d9b4be8b3ca881d568384d8c2097caef6b822e10724648435c`) also covers
+a finding under coordinated disclosure, and will be published once that
+disclosure ends.
+
+## Layout
+
+- `research/`: the report, methodology, incident background and limitations
+- `evidence/`: the evidence package and its checksum
+- `scripts/`: reproduction scripts
+- `disclosures/`: the disclosure timeline
+
+## Licensing
+
+- Research documents and original results: CC BY 4.0 (`LICENSE-DOCS`).
+- Original scripts: Apache-2.0 (`LICENSE-CODE`), marked with SPDX headers.
+- Third-party certificates, trust stores and Node.js source files keep their
+  own terms (`THIRD_PARTY_NOTICES.md`); neither license above applies to them.
+- CytherAI's verification software is not part of this repository.
+
+## Credit
+
+Wayne reported the key compromise, and the Chrome Root Program forwarded it to
+Mozilla. Mozilla confirmed it and recovered the keys independently. The test
+chains and the offline check come from https://emudhra.we-have-a-problem.com/
+(Dennis Jackson and contributors).
+
+Research by Malek Alhazmi, CytherAI. To cite this work, use
+`CITATION.cff`. To report a problem, see `SECURITY.md`.

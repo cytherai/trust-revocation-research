@@ -1,0 +1,3 @@
+# Keep LF line endings on every platform, so the scripts and checksum lists work after any checkout.
+* text=auto eol=lf
+*.zip binary
