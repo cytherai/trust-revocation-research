@@ -13,6 +13,7 @@
 set -u
 export LC_ALL=C
 dir=${1:?usage: verify_stores.sh <evidence_dir>}
+[ -f "$dir/RETRIEVED_AT" ] || { echo "verify_stores.sh: $dir is not an extracted evidence package (no RETRIEVED_AT)" >&2; exit 2; }
 case "$(openssl version)" in
   "OpenSSL "[3-9].*) ;;
   *) echo "verify_stores.sh: needs OpenSSL 3 or later, found: $(openssl version)" >&2; exit 2 ;;

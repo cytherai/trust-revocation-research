@@ -39,6 +39,25 @@ clients that rely on their trust store alone, as Node.js does by default.
 
 Each result is ACCEPTED, or rejected with OpenSSL's reason.
 
+## Live HTTPS test
+
+`scripts/run_node_tls_probe.sh` runs `scripts/node_tls_probe.js` inside each
+official image, pinned by index digest, on a chosen platform. The probe makes
+one HTTPS GET with Node.js's `https` module and certificate verification on
+(`rejectUnauthorized: true`). It records the Node.js version, the
+architecture, the TLS version, the peer certificate and the HTTP status, or
+the error code.
+
+- ACCEPT means the TLS handshake completed with a verified chain and an HTTP
+  response arrived, whatever its status.
+- REJECT means a certificate verification error.
+- ERROR is anything else: timeouts, DNS or network failures, unknown error
+  codes, or an unexpected Node.js version. Any ERROR fails the run.
+
+Each image must accept example.com as a control. `--use-openssl-ca` is tested
+against example.com too, so that a rejection caused by an empty store can't be
+mistaken for distrust. The script seals each run's output with `SHA256SUMS`.
+
 ## Integrity
 
 - Every file in the evidence package is listed in its `SHA256SUMS`, and the
@@ -52,6 +71,10 @@ Each result is ACCEPTED, or rejected with OpenSSL's reason.
 
 ## What a result means
 
-ACCEPTED means the trust store would validate the chain. It does not establish
-that an application uses that store, that any deployment runs the artifact, or
-that any interception occurred. See [limitations.md](limitations.md).
+An ACCEPTED result means different things in the two tests:
+- In the offline check, the trust store would validate the chain.
+- In the live test, the runtime completed a verified HTTPS connection through
+  it.
+
+Neither result establishes that any deployment runs the artifact, or that any
+interception occurred. See [limitations.md](limitations.md).

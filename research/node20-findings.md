@@ -25,6 +25,8 @@ store doesn't change a default Node.js 20 process.
 
 ## What we verified
 
+### The root stores, offline
+
 We took the root list from Node.js's source (`src/node_root_certs.h`) at each
 release tag and checked it with OpenSSL against two test chains published by
 the disclosure site, whose leaves were never logged to Certificate
@@ -37,12 +39,36 @@ Transparency:
 | 22.23.4 | rejected | rejected |
 | 24.22.1 | rejected | rejected |
 
-The images' Node.js version comes from their published configuration
-(`NODE_VERSION=20.20.2`); we did not extract roots from the image binaries.
-This shows that the trust store would validate such a chain. It doesn't show
-any attack, interception or affected deployment. Images built from `node:22`
-or `node:24` before the fixed releases carry older roots too: 22.22.0 accepts
-the chain.
+Images built from `node:22` or `node:24` before the fixed releases carry older
+roots too: 22.22.0 accepts the chain.
+
+### The official images, over HTTPS
+
+On 23 October 2026 we ran the Node.js runtimes in `node:20-slim`, pinned to
+the digest above, and in `node:22.23.4-bookworm-slim`, on both linux/arm64
+and linux/amd64. Each made HTTPS requests with certificate verification on: to
+the disclosure site's test endpoint,
+https://dv-g3b-noct-emudhra.we-have-a-problem.com/, and to example.com as a
+control. The results were the same on both platforms:
+
+| Runtime | example.com | Test endpoint |
+|---|---|---|
+| `node:20-slim`, Node.js 20.20.2 | accepted | **accepted**: TLS 1.3, verified chain, HTTP 200 |
+| `node:22.23.4-bookworm-slim` | accepted | **rejected**: `CERT_REVOKED` |
+
+The endpoint served the leaf certificate from the evidence's test chain
+(SHA-256 `0C:BF:E2:2B…4A:70`), which was issued by the compromised
+EM DV TLS CA - G3B. Node.js 22.23.4 rejects chains through the eight
+compromised intermediates by their public keys, and reports this as
+`CERT_REVOKED` (nodejs/node#66871).
+
+`node:20-slim` ships no system CA bundle. Started with `--use-openssl-ca`,
+Node.js 20 rejected both example.com and the test endpoint. In this image that
+switch disables HTTPS altogether; it is not a workaround.
+
+This shows that the runtime in the official image trusts a chain through a
+compromised intermediate. It doesn't show any attack, interception or affected
+deployment.
 
 ## Why rebuilding doesn't help
 
@@ -61,8 +87,15 @@ version in the image you actually ship.
 
 ## Evidence
 
-`evidence/node20-trust-evidence.zip` in release v0.1.0, with its SHA-256 in
-`evidence/SHA256SUMS`. The README explains how to verify and reproduce it.
+Release v0.1.0 has two evidence packages, with their SHA-256 checksums in
+`evidence/SHA256SUMS`:
+
+- `evidence/node20-trust-evidence.zip`: the trust stores, test chains, OpenSSL
+  results and Docker Hub state
+- `evidence/node20-live-tls-2026-10-23.zip`: the live HTTPS test, on both
+  platforms
+
+The README explains how to verify and reproduce them.
 Method: [methodology.md](methodology.md). Limits: [limitations.md](limitations.md).
 Background: [emudhra-incident.md](emudhra-incident.md).
 
@@ -73,3 +106,4 @@ Background: [emudhra-incident.md](emudhra-incident.md).
 - Node.js release schedule: https://github.com/nodejs/Release
 - docker-node versions: https://github.com/nodejs/docker-node/blob/main/versions.json
 - Node.js `--use-openssl-ca`: https://github.com/nodejs/node/blob/v20.20.2/doc/api/cli.md
+- Node.js blocked-key check: https://github.com/nodejs/node/pull/66871

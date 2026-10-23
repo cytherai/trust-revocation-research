@@ -11,6 +11,7 @@
 set -euo pipefail
 export LC_ALL=C
 dir=${1:?usage: check_provenance.sh <evidence_dir>}
+[ -f "$dir/RETRIEVED_AT" ] || { echo "check_provenance.sh: $dir is not an extracted evidence package (no RETRIEVED_AT)" >&2; exit 2; }
 CHAINS_ZIP=https://emudhra.we-have-a-problem.com/chains.zip
 CHAINS_SHA256=7b949956955fc501a30f4d98d2f513d34c0bbbe92e29a968194c96e097ce2345
 work=$(mktemp -d); trap 'rm -rf "$work"' EXIT

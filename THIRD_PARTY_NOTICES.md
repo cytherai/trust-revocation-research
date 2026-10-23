@@ -11,3 +11,7 @@ ownership of it.
 | `stores/node-v*/roots.pem` | The same header at each tag, with each PEM line taken out of its C string quoting and nothing else changed | As above |
 | The certificates in the two rows above | Mozilla's NSS root store, `lib/ckfw/builtins/certdata.txt` | Mozilla Public License 2.0: https://mozilla.org/MPL/2.0/ |
 | `results/registry-state.txt` | Tag data from the Docker Hub API (hub.docker.com/v2) | Factual records |
+
+`node20-live-tls-2026-10-23.zip` contains only CytherAI's scripts and results.
+The certificate fields recorded in its results are factual data from the TLS
+connections.

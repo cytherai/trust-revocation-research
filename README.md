@@ -14,10 +14,13 @@ life on 30 April 2026 and did not get the fix.
 **Finding:** the official `node:20`, `node:20-slim` and `node:20-alpine` images
 run Node.js 20.20.2, whose built-in root store still accepts a certificate
 chain from one of the compromised intermediates. Rebuilding does not change
-that. Report: [research/node20-findings.md](research/node20-findings.md).
+that. In a live HTTPS test, the runtime in `node:20-slim` completed a
+certificate-verified connection to the disclosure site's test endpoint, and
+the runtime in `node:22.23.4` rejected it. Report:
+[research/node20-findings.md](research/node20-findings.md).
 
-This shows that a trust store would validate such a chain. It does not show an
-attack, an interception or an affected deployment.
+This shows that the runtime trusts a chain through a compromised intermediate.
+It does not show an attack, an interception or an affected deployment.
 
 ## Verify it yourself
 
@@ -30,6 +33,8 @@ is LibreSSL, which cannot run these checks: install OpenSSL
     (cd /tmp/ev/node20-trust-evidence && sha256sum -c SHA256SUMS)
     bash scripts/verify_stores.sh /tmp/ev/node20-trust-evidence
     bash scripts/check_provenance.sh /tmp/ev/node20-trust-evidence
+    unzip -oq evidence/node20-live-tls-2026-10-23.zip -d /tmp/ev
+    (cd /tmp/ev/node20-live-tls-2026-10-23 && sha256sum -c SHA256SUMS)
 
 `verify_stores.sh` should report the chain through emSign ECC Root CA - G3 as
 ACCEPTED by the Node.js 20.20.2 and 22.22.0 roots, and rejected by 22.23.4 and
@@ -38,14 +43,22 @@ ACCEPTED by the Node.js 20.20.2 and 22.22.0 roots, and rejected by 22.23.4 and
 - it checks the test chains against the disclosure site's chains.zip;
 - it checks that the `node:20` tags still point at the recorded digests.
 
+The live HTTPS test's results are in `runs/*/results.jsonl` in the second
+package. To repeat the test you need Docker. Run
+`bash scripts/run_node_tls_probe.sh` from outside the repository, and set
+`DOCKER_PLATFORM=linux/amd64` for amd64.
+
 ## Evidence and timing
 
-The evidence was retrieved on 2026-10-22 at 21:19 UTC (`RETRIEVED_AT` in the
-package), before this repository was published. The current evidence package
-contains only the Node.js material. Apart from its README and checksum list, every file
-in it is unmodified from CytherAI's full evidence snapshot, or, under
-`results/`, made of unmodified lines from it. The
-full snapshot (zip SHA-256
+The evidence in `node20-trust-evidence.zip` was retrieved on 2026-10-22 at
+21:19 UTC (`RETRIEVED_AT` in the package), before this repository was
+published. The live HTTPS test ran on 2026-10-23 between 06:13 and 06:17 UTC,
+and `node20-live-tls-2026-10-23.zip` holds both runs unmodified.
+
+Both packages contain only the Node.js material. Apart from its README and
+checksum list, every file in `node20-trust-evidence.zip` is unmodified from
+CytherAI's full evidence snapshot, or, under `results/`, made of unmodified
+lines from it. The full snapshot (zip SHA-256
 `6f5f468885c921d9b4be8b3ca881d568384d8c2097caef6b822e10724648435c`) also covers
 a finding under coordinated disclosure, and will be published once that
 disclosure ends.
@@ -53,7 +66,7 @@ disclosure ends.
 ## Layout
 
 - `research/`: the report, methodology, incident background and limitations
-- `evidence/`: the evidence package and its checksum
+- `evidence/`: the evidence packages and their checksums
 - `scripts/`: reproduction scripts
 - `disclosures/`: the disclosure timeline
 
