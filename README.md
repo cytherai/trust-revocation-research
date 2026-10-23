@@ -32,20 +32,27 @@ is LibreSSL, which cannot run these checks: install OpenSSL
     unzip -oq evidence/node20-trust-evidence.zip -d /tmp/ev
     (cd /tmp/ev/node20-trust-evidence && sha256sum -c SHA256SUMS)
     bash scripts/verify_stores.sh /tmp/ev/node20-trust-evidence
+    bash scripts/check_isolation.sh /tmp/ev/node20-trust-evidence
     bash scripts/check_provenance.sh /tmp/ev/node20-trust-evidence
     unzip -oq evidence/node20-live-tls-2026-10-23.zip -d /tmp/ev
     (cd /tmp/ev/node20-live-tls-2026-10-23 && sha256sum -c SHA256SUMS)
 
-`verify_stores.sh` should report the chain through emSign ECC Root CA - G3 as
-ACCEPTED by the Node.js 20.20.2 and 22.22.0 roots, and rejected by 22.23.4 and
-24.22.1. `check_provenance.sh` does three checks against the live sources:
-- it re-derives each Node.js root store from its release tag;
-- it checks the test chains against the disclosure site's chains.zip;
-- it checks that the `node:20` tags still point at the recorded digests.
+What each script should show:
+- `verify_stores.sh` reports the chain through emSign ECC Root CA - G3 as
+  ACCEPTED by the Node.js 20.20.2 and 22.22.0 roots, and rejected by 22.23.4
+  and 24.22.1. It trusts only the store under test.
+- `check_isolation.sh` confirms that the results don't change when OpenSSL's
+  default trust locations hold the emSign root.
+- `check_provenance.sh` runs three checks against the live sources: it
+  re-derives each Node.js root store from its release tag, checks the test
+  chains against the disclosure site's chains.zip, and checks that the
+  `node:20` tags still point at the recorded digests. It exits 1 if any
+  evidence differs from its source.
 
 The live HTTPS test's results are in `runs/*/results.jsonl` in the second
-package. To repeat the test you need Docker. Run
-`bash scripts/run_node_tls_probe.sh` from outside the repository, and set
+package. To repeat the test you need Docker. Run it from the repository,
+giving an output directory that doesn't exist yet, for example
+`bash scripts/run_node_tls_probe.sh /tmp/tls-run`. Set
 `DOCKER_PLATFORM=linux/amd64` for amd64.
 
 ## Evidence and timing

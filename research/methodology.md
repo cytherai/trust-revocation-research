@@ -27,12 +27,25 @@ and push dates.
 
 ## Verification
 
-`openssl verify` (OpenSSL 3) with the store as the only trust anchors
-(`-CAfile`), the rest of the chain as untrusted intermediates (`-untrusted`),
-purpose `sslserver` and the test host name (`-verify_hostname`). The 2026-10-22
-run used the current time. `scripts/verify_stores.sh` verifies as of the
-evidence's `RETRIEVED_AT` (`-attime`), so it reproduces the same results after
-the test leaves expire.
+`scripts/verify_stores.sh` runs `openssl verify` (OpenSSL 3) with:
+- the store as the only trust anchors: `-CAfile`, plus `-no-CApath` and
+  `-no-CAstore`, which stop OpenSSL's default directory and store from adding
+  anchors;
+- the rest of the chain as untrusted intermediates (`-untrusted`);
+- purpose `sslserver` and the test host name (`-verify_hostname`);
+- the evidence's `RETRIEVED_AT` as the verification time (`-attime`), so the
+  results reproduce after the test leaves expire.
+
+`scripts/check_isolation.sh` checks the isolation. It runs `verify_stores.sh`
+again with emSign ECC Root CA - G3 placed in OpenSSL's default trust
+locations, and requires the results to be unchanged.
+
+The 2026-10-22 run used the current time and `-CAfile` only. Its results are
+unaffected. Default trust locations can only add trust anchors, and in that run
+the 22.23.4 and 24.22.1 stores rejected both chains. That could not have
+happened if the host's default locations had held either root the chains need.
+An isolated re-verification gives the same results, and is recorded in
+`evidence/node20-trust-evidence-isolated-check-2026-10-23.txt`.
 
 No revocation and no Certificate Transparency checks are made. This matches
 clients that rely on their trust store alone, as Node.js does by default.
@@ -52,11 +65,30 @@ the error code.
   response arrived, whatever its status.
 - REJECT means a certificate verification error.
 - ERROR is anything else: timeouts, DNS or network failures, unknown error
-  codes, or an unexpected Node.js version. Any ERROR fails the run.
+  codes, or no result within 30 seconds.
+
+Each case also states what it expects:
+- the Node.js version;
+- the outcome;
+- a detail: for a REJECT, the error code; for an ACCEPT of the test endpoint,
+  the SHA-256 fingerprint of the leaf in the evidence's test chain.
+
+The probe records `version_match`, `outcome_match` and `detail_match`. A
+mismatch means the runtime, the endpoint or the reason for a rejection has
+changed, and the result needs review before any conclusion is drawn. After all
+cases have run, the script fails the run unless `results.jsonl` holds exactly
+one record per case, in order, with every check passed. It then seals the
+output with `SHA256SUMS`. It refuses to reuse an existing output directory, so
+a retry never overwrites an earlier run.
 
 Each image must accept example.com as a control. `--use-openssl-ca` is tested
 against example.com too, so that a rejection caused by an empty store can't be
-mistaken for distrust. The script seals each run's output with `SHA256SUMS`.
+mistaken for distrust.
+
+The 2026-10-23 runs used the earlier version of the probe and runner; both are
+archived in `evidence/node20-live-tls-2026-10-23.zip`. That version recorded
+the outcome and version checks but not the detail check. The archived results
+contain the expected error code and leaf fingerprint for every case.
 
 ## Integrity
 
@@ -67,7 +99,9 @@ mistaken for distrust. The script seals each run's output with `SHA256SUMS`.
   the subset when that snapshot is released.
 - `scripts/check_provenance.sh` re-derives the Node.js stores from their tags,
   checks the test chains against chains.zip, and compares the `node:20` tags
-  with the recorded digests.
+  with the recorded digests. It exits 1 if any evidence differs from its
+  source, and 2 if it could not complete. A moved image tag is reported as
+  CHANGED and does not affect the archived evidence.
 
 ## What a result means
 

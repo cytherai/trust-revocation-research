@@ -1,0 +1,15 @@
+# Isolated re-verification of node20-trust-evidence.zip (SHA-256 33c5f849ae1bf4fb47fc838c55257deb299b29108b029a8f929fa2a256241633)
+# Run 2026-10-23T10:54:03Z with scripts/verify_stores.sh and scripts/check_isolation.sh. Earlier runs used -CAfile alone;
+# here only the tested store is trusted. The results match the published table.
+
+# OpenSSL 3.6.4 25 Aug 2026 (Library: OpenSSL 3.6.4 25 Aug 2026); trust anchors: only the store tested (-no-CApath -no-CAstore); verified as of 2026-10-22T21:19:13Z
+dv-g3b-noct      node-v20.20.2/roots.pem    ACCEPTED
+dv-g3b-noct      node-v22.22.0/roots.pem    ACCEPTED
+dv-g3b-noct      node-v22.23.4/roots.pem    rejected (20 at 2 depth lookup: unable to get local issuer certificate)
+dv-g3b-noct      node-v24.22.1/roots.pem    rejected (20 at 2 depth lookup: unable to get local issuer certificate)
+dv-g3b-aaa-noct  node-v20.20.2/roots.pem    rejected (20 at 1 depth lookup: unable to get local issuer certificate)
+dv-g3b-aaa-noct  node-v22.22.0/roots.pem    rejected (20 at 1 depth lookup: unable to get local issuer certificate)
+dv-g3b-aaa-noct  node-v22.23.4/roots.pem    rejected (20 at 1 depth lookup: unable to get local issuer certificate)
+dv-g3b-aaa-noct  node-v24.22.1/roots.pem    rejected (20 at 1 depth lookup: unable to get local issuer certificate)
+
+PASS: results unchanged with emSign ECC Root CA - G3 in OpenSSL's default trust locations

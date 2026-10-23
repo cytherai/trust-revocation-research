@@ -21,12 +21,15 @@ esac
 t=$(cat "$dir/RETRIEVED_AT")
 attime=$(date -u -d "$t" +%s 2> /dev/null || date -u -j -f '%Y-%m-%dT%H:%M:%SZ' "$t" +%s)
 work=$(mktemp -d); trap 'rm -rf "$work"' EXIT
+echo "# $(openssl version); trust anchors: only the store tested (-no-CApath -no-CAstore); verified as of $t"
 for chain in "$dir"/chains/dv-g3b-noct-emudhra.we-have-a-problem.com.pem "$dir"/chains/dv-g3b-aaa-noct-emudhra.we-have-a-problem.com.pem; do
   host=$(basename "$chain" .pem)
   awk -v d="$work" '/BEGIN CERT/{n++} {print > (d "/c" n ".pem")}' "$chain"
   cat "$work"/c[2-9].pem > "$work/untrusted.pem"
   for store in "$dir"/stores/*/*; do
-    r=$(openssl verify -attime "$attime" -CAfile "$store" -untrusted "$work/untrusted.pem" \
+    # -CAfile replaces only OpenSSL's default CA file; -no-CApath and -no-CAstore
+    # stop the default directory and store from adding trust anchors.
+    r=$(openssl verify -attime "$attime" -CAfile "$store" -no-CApath -no-CAstore -untrusted "$work/untrusted.pem" \
         -purpose sslserver -verify_hostname "$host" "$work/c1.pem" 2>&1)
     case "$r" in
       *": OK") v=ACCEPTED ;;

@@ -20,6 +20,15 @@
 - In the linux/amd64 run, `environment.txt`'s `PLATFORM` field shows Docker's
   default platform for the image (linux/arm64), not the variant that ran. The
   `arch` field of each result records the architecture that ran (`x64`).
+- The scripts inside the evidence packages are kept exactly as they ran. The
+  repository's scripts fix defects found later:
+  - `verify_stores.sh` now excludes OpenSSL's default trust locations;
+  - `run_node_tls_probe.sh` refuses to reuse an output directory, checks
+    every pipeline status, and validates that every case was recorded;
+  - `check_provenance.sh` exits non-zero on a mismatch.
+
+  None of these defects affected the published results (see
+  [methodology.md](methodology.md)).
 - A Dockerfile that uses `node:20` shows what an image built from it would
   contain, not that a vulnerable deployment exists.
 - Docker Hub tags change. The recorded state is as of `RETRIEVED_AT`;
