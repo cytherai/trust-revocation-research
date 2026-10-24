@@ -1,5 +1,11 @@
 # CytherAI Trust Revocation Research
 
+[![Latest release](https://img.shields.io/github/v/release/cytherai/trust-revocation-research?label=release)](https://github.com/cytherai/trust-revocation-research/releases/latest)
+[![Releases: immutable, attested](https://img.shields.io/badge/releases-immutable%2C%20attested-success)](https://github.com/cytherai/trust-revocation-research/releases)
+[![Docs license: CC BY 4.0](https://img.shields.io/badge/docs-CC%20BY%204.0-lightgrey)](LICENSE-DOCS)
+[![Code license: Apache-2.0](https://img.shields.io/badge/code-Apache--2.0-blue)](LICENSE-CODE)
+[![Cite this repository](https://img.shields.io/badge/cite-CITATION.cff-informational)](CITATION.cff)
+
 When a root program distrusts a certificate authority, do published software
 artifacts stop trusting it? This repository records our measurements, the
 evidence behind them, and scripts to reproduce them.
